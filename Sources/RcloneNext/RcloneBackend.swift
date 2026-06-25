@@ -10,7 +10,7 @@ private final class ErrBuffer: @unchecked Sendable {
 
 /// Thin, Sendable wrapper around the rclone CLI. All process work happens off the
 /// main actor; results come back via async/await or an AsyncThrowingStream.
-final class RcloneBackend: Sendable {
+final class RcloneBackend: @unchecked Sendable {
     static let shared = RcloneBackend()
 
     private let lock = NSLock()
@@ -51,12 +51,11 @@ final class RcloneBackend: Sendable {
             try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Data, Error>) in
                 DispatchQueue.global(qos: .userInitiated).async {
                     // Drain stderr off-thread so stdout's readToEnd() can't deadlock.
-                    let lock = NSLock()
-                    var errData = Data()
+                    let errBuffer = ErrBuffer()
                     errPipe.fileHandleForReading.readabilityHandler = { h in
                         let d = h.availableData
                         guard !d.isEmpty else { return }
-                        lock.lock(); errData.append(d); lock.unlock()
+                        errBuffer.append(d)
                     }
 
                     do { try process.run() }
@@ -65,14 +64,14 @@ final class RcloneBackend: Sendable {
                     let outData = (try? outPipe.fileHandleForReading.readToEnd()) ?? Data()
                     process.waitUntilExit()
                     errPipe.fileHandleForReading.readabilityHandler = nil
-                    lock.lock(); let stderr = errData; lock.unlock()
+                    let stderr = errBuffer.string
 
                     if process.terminationStatus == 0 {
                         cont.resume(returning: outData)
                     } else {
                         cont.resume(throwing: RcloneError.nonZeroExit(
                             code: process.terminationStatus,
-                            stderr: String(decoding: stderr, as: UTF8.self)))
+                            stderr: stderr))
                     }
                 }
             }
@@ -96,9 +95,7 @@ final class RcloneBackend: Sendable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { dec in
             let s = try dec.singleValueContainer().decode(String.self)
-            return Self.iso.date(from: s)
-                ?? ISO8601DateFormatter().date(from: s)
-                ?? .distantPast
+            return Self.parseISO8601(s) ?? .distantPast
         }
         do { return try decoder.decode([RcloneItem].self, from: data) }
         catch { throw RcloneError.decoding("\(error)") }
@@ -290,9 +287,9 @@ final class RcloneBackend: Sendable {
         FileManager.default.fileExists(atPath: "/Library/Filesystems/macfuse.fs")
     }
 
-    private static let iso: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
-    }()
+    private static func parseISO8601(_ s: String) -> Date? {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fractional.date(from: s) ?? ISO8601DateFormatter().date(from: s)
+    }
 }

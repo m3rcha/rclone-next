@@ -57,6 +57,7 @@ enum BrandImage {
               fallback: "externaldrive.connected.to.line.below")
     }
 
+    @MainActor
     static func applyAppIcon() {
         guard let source = png(named: "app-icon-color-512") else { return }
         NSApp.applicationIconImage = source

@@ -63,6 +63,7 @@ final class MountManager {
         process.standardError = errPipe
 
         let mount = ActiveMount(remote: remote, mountPoint: folder, state: .mounting, process: process)
+        let mountID = mount.id
 
         // Capture stderr (thread-safe) so a failed mount can show why.
         let errBuffer = ErrBuffer()
@@ -76,9 +77,9 @@ final class MountManager {
             let status = proc.terminationStatus
             Task { @MainActor in
                 guard let self,
-                      let idx = self.active.firstIndex(where: { $0.id == mount.id }) else { return }
-                if self.unmounting.contains(mount.id) {
-                    self.unmounting.remove(mount.id)
+                      let idx = self.active.firstIndex(where: { $0.id == mountID }) else { return }
+                if self.unmounting.contains(mountID) {
+                    self.unmounting.remove(mountID)
                     self.active.remove(at: idx)
                 } else {
                     let lastLine = err.split(whereSeparator: \.isNewline).last.map(String.init)

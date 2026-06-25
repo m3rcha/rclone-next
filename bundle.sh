@@ -41,9 +41,14 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp ".build/release/RcloneNext" "$APP/Contents/MacOS/RcloneNext"
 cp "Packaging/Info.plist"      "$APP/Contents/Info.plist"
 [ -f "Packaging/AppIcon.icns" ] && cp "Packaging/AppIcon.icns" "$APP/Contents/Resources/"
-RESOURCE_BUNDLE=$(find .build/release -name 'RcloneNext_RcloneNext.bundle' -type d | head -1)
-if [ -n "$RESOURCE_BUNDLE" ]; then
-  cp -R "$RESOURCE_BUNDLE" "$APP/Contents/Resources/"
+# Flat PNGs in the app bundle (Bundle.main) — portable without .build paths.
+for icon in "$RES"/app-icon-*.png; do
+  [ -f "$icon" ] || continue
+  cp "$icon" "$APP/Contents/Resources/"
+done
+if ! ls "$APP/Contents/Resources"/app-icon-*.png >/dev/null 2>&1; then
+  echo "error: no app-icon PNGs in $RES — check white-icon/ and color-icon/" >&2
+  exit 1
 fi
 codesign --force --deep --sign - "$APP"
 echo "Built $APP — double-click in Finder or run: open $APP"

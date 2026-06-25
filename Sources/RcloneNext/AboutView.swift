@@ -5,12 +5,8 @@ struct AboutView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
 
-    private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
-    }
-    private var buildNumber: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
-    }
+    private var appVersion: String { AppInfo.version }
+    private var buildNumber: String { AppInfo.build }
 
     var body: some View {
         VStack(spacing: 14) {
@@ -28,18 +24,7 @@ struct AboutView: View {
             }
 
             GroupBox {
-                VStack(spacing: 10) {
-                    updateRow(title: "App", state: app.appUpdateState)
-                    Divider()
-                    updateRow(title: "rclone", state: app.rcloneUpdateState)
-                    Divider()
-                    Button {
-                        app.checkForUpdates()
-                    } label: {
-                        Label("Check for Updates", systemImage: "arrow.clockwise")
-                            .frame(maxWidth: .infinity)
-                    }
-                }.padding(6)
+                UpdateStatusBox().padding(6)
             }
             .padding(.horizontal)
 
@@ -59,29 +44,5 @@ struct AboutView: View {
         }
         .frame(width: 360, height: 480)
         .task { await app.bootstrap() }
-    }
-
-    @ViewBuilder
-    private func updateRow(title: String, state: UpdateState) -> some View {
-        HStack {
-            Text(title)
-            Spacer()
-            switch state {
-            case .idle:
-                Text("Not checked").foregroundStyle(.secondary)
-            case .checking:
-                ProgressView().controlSize(.small)
-            case .upToDate:
-                Label("Up to date", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
-            case .available(let v):
-                Label("v\(v) available", systemImage: "arrow.down.circle.fill")
-                    .foregroundStyle(.orange)
-            case .notConfigured:
-                Text("No releases found").foregroundStyle(.secondary)
-            case .failed(let msg):
-                Label("Check failed", systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.secondary).help(msg)
-            }
-        }.font(.callout)
     }
 }

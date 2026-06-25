@@ -7,7 +7,6 @@ struct ContentView: View {
 
     var body: some View {
         @Bindable var app = app
-        @Bindable var mounts = app.mounts
         NavigationSplitView {
             List(selection: $app.selection) {
                 Section {
@@ -43,22 +42,8 @@ struct ContentView: View {
             }
         }
         .task { await app.bootstrap() }
-        .sheet(isPresented: $app.showingAddRemote) { AddRemoteView() }
-        .sheet(isPresented: $app.showingAbout) { AboutView() }
-        .sheet(isPresented: $app.showingJobs) { JobsView() }
-        .sheet(isPresented: $app.showingWelcome) { WelcomeView() }
-        .sheet(isPresented: $app.showingSettings) { SettingsView() }
+        .appSheets(app: app, mounts: app.mounts)
         .sheet(item: $dedupeRemote) { DedupeSheet(remote: $0) }
-        .alert("rclone Error", isPresented: .constant(app.loadError != nil)) {
-            Button("OK") { app.loadError = nil }
-        } message: { Text(app.loadError ?? "") }
-        .alert("macFUSE Required to Mount Drives", isPresented: $mounts.showingMacFUSEAlert) {
-            Button("Open Instructions") { MountManager.openMountDocs() }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Mounting remotes as local drives needs macFUSE. Open rclone's documentation "
-               + "for installation steps.")
-        }
     }
 
     @ViewBuilder

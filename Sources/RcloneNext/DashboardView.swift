@@ -9,9 +9,9 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
                 heroHeader
-                rcloneCard
+                softwareCard
                 if let t = app.activeTransfer { transferCard(t) }
                 mountsCard
                 remotesCard
@@ -21,6 +21,9 @@ struct DashboardView: View {
         }
         .navigationTitle("Dashboard")
         .toolbar {
+            Button { app.showingAbout = true } label: {
+                Label("About", systemImage: "info.circle")
+            }.help("About Rclone Next…")
             Button { app.showingSettings = true } label: {
                 Label("Settings", systemImage: "gearshape")
             }.help("Settings…")
@@ -31,7 +34,12 @@ struct DashboardView: View {
                 Label("Add Remote", systemImage: "plus")
             }.help("Add Remote…")
         }
-        .task { await app.bootstrap() }
+        .task {
+            await app.bootstrap()
+            if app.appUpdateState == .idle, app.rcloneUpdateState == .idle {
+                app.checkForUpdates()
+            }
+        }
     }
 
     // MARK: Hero header
@@ -39,7 +47,8 @@ struct DashboardView: View {
     private var heroHeader: some View {
         HStack(spacing: 14) {
             BrandImage.headerLogo
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Rclone Next").font(.title3).bold()
                 Text("\(app.remotes.count) remote\(app.remotes.count == 1 ? "" : "s") · "
                    + "\(app.mounts.active.filter { $0.state == .mounted }.count) mounted")
                     .font(.callout).foregroundStyle(.secondary)
@@ -48,40 +57,64 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: rclone status
+    // MARK: Software (app + rclone)
 
-    private var rcloneCard: some View {
+    private var softwareCard: some View {
         GroupBox {
-            HStack(spacing: 16) {
-                Image(systemName: "shippingbox.fill")
-                    .font(.system(size: 28)).foregroundStyle(.tint)
-                    .frame(width: 44, height: 44)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("rclone \(app.rcloneVersion ?? "—")").font(.headline)
-                    Text(app.rclonePath).font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 16) {
+                softwareRow(
+                    icon: { BrandImage.headerLogo },
+                    title: "Rclone Next",
+                    subtitle: "Version \(AppInfo.version) (\(AppInfo.build))",
+                    state: app.appUpdateState
+                )
+                Divider()
+                softwareRow(
+                    icon: {
+                        Image(systemName: "shippingbox.fill")
+                            .font(.title2)
+                            .foregroundStyle(.tint)
+                            .frame(width: 28, height: 28)
+                    },
+                    title: "rclone \(app.rcloneVersion ?? "—")",
+                    subtitle: app.rclonePath,
+                    state: app.rcloneUpdateState
+                )
+                Divider()
+                HStack(alignment: .center, spacing: 16) {
+                    Button { app.checkForUpdates() } label: {
+                        Label("Check for Updates", systemImage: "arrow.clockwise")
+                    }
+                    Spacer(minLength: 12)
+                    Link("GitHub", destination: URL(string:
+                        "https://github.com/\(AppUpdate.owner)/\(AppUpdate.repo)")!)
+                    Link("rclone.org", destination: URL(string: "https://rclone.org")!)
                 }
-                Spacer()
-                updateBadge(app.rcloneUpdateState)
+                .font(.callout)
             }
-            .padding(6)
-        } label: { Label("rclone", systemImage: "internaldrive") }
+            .padding(10)
+        } label: { Label("Software", systemImage: "arrow.triangle.2.circlepath.circle") }
     }
 
-    @ViewBuilder
-    private func updateBadge(_ state: UpdateState) -> some View {
-        switch state {
-        case .idle, .notConfigured: EmptyView()
-        case .checking: ProgressView().controlSize(.small)
-        case .upToDate:
-            Label("Up to date", systemImage: "checkmark.seal.fill")
-                .font(.caption).foregroundStyle(.green)
-        case .available(let v):
-            Label("v\(v) available", systemImage: "arrow.down.circle.fill")
-                .font(.caption).foregroundStyle(.orange)
-        case .failed:
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.caption).foregroundStyle(.secondary)
+    private func softwareRow<I: View>(
+        @ViewBuilder icon: () -> I,
+        title: String,
+        subtitle: String,
+        state: UpdateState
+    ) -> some View {
+        HStack(alignment: .center, spacing: 14) {
+            icon()
+                .frame(width: 32, height: 32)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.headline)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            Spacer(minLength: 12)
+            UpdateStatusLabel(state: state)
         }
     }
 
@@ -100,7 +133,8 @@ struct DashboardView: View {
                         .buttonStyle(.borderless).font(.caption)
                 }
                 .font(.caption).monospacedDigit()
-            }.padding(6)
+            }
+            .padding(6)
         } label: { Label("Active Transfer", systemImage: "arrow.left.arrow.right.circle") }
     }
 

@@ -22,6 +22,12 @@ struct RcloneNextApp: App {
                 .onAppear { NSApp.activate(ignoringOtherApps: true) }
         }
         .windowToolbarStyle(.unified)
+
+        Settings {
+            SettingsView()
+                .environment(app)
+        }
+
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("About Rclone Next") { app.showingAbout = true }

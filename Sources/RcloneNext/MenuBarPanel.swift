@@ -62,6 +62,7 @@ struct MenuBarPanel: View {
         }
         .padding(12)
         .frame(width: 340)
+        .appSheets(app: app, mounts: app.mounts)
         .task { await app.bootstrap() }
     }
 

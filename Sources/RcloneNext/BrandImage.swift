@@ -3,8 +3,13 @@ import AppKit
 
 /// Brand marks synced from `white-icon/`, `color-icon/`, and horizontal SVGs at build time.
 enum BrandImage {
+    private static func resourceURL(named name: String, ext: String) -> URL? {
+        Bundle.main.url(forResource: name, withExtension: ext)
+            ?? Bundle.module.url(forResource: name, withExtension: ext)
+    }
+
     private static func png(named name: String, template: Bool = false) -> NSImage? {
-        guard let url = Bundle.module.url(forResource: name, withExtension: "png"),
+        guard let url = resourceURL(named: name, ext: "png"),
               let image = NSImage(contentsOf: url) else { return nil }
         image.isTemplate = template
         return image

@@ -59,7 +59,7 @@ struct AboutView: View {
             Button("Done") { dismiss() }.keyboardShortcut(.defaultAction).padding(.bottom)
         }
         .frame(width: 360, height: 480)
-        .task { if app.rcloneVersion == nil { await app.bootstrap() } }
+        .task { await app.bootstrap() }
     }
 
     @ViewBuilder

@@ -24,5 +24,11 @@ final class ListingCache {
 
     /// Drop one path (after a mutation there) or everything.
     func invalidate(_ path: String) { store[path] = nil }
+
+    /// Drop every cached listing under a remote or path prefix (e.g. after sync jobs).
+    func invalidate(matchingPrefix prefix: String) {
+        for key in store.keys where key.hasPrefix(prefix) { store[key] = nil }
+    }
+
     func clear() { store.removeAll() }
 }

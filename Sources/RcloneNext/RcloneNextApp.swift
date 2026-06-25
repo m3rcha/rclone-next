@@ -26,6 +26,8 @@ struct RcloneNextApp: App {
             }
             CommandGroup(after: .appInfo) {
                 Button("Check for Updates…") { app.checkForUpdates() }
+                Button("Settings…") { app.showingSettings = true }
+                    .keyboardShortcut(",", modifiers: .command)
             }
             CommandGroup(replacing: .newItem) {
                 Button("Add Remote…") { app.showingAddRemote = true }

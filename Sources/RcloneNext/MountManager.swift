@@ -79,9 +79,8 @@ final class MountManager {
                       let idx = self.active.firstIndex(where: { $0.id == mount.id }) else { return }
                 if self.unmounting.contains(mount.id) {
                     self.unmounting.remove(mount.id)
-                    self.active.remove(at: idx)                 // expected, user-initiated unmount
+                    self.active.remove(at: idx)
                 } else {
-                    // Unexpected exit — keep it visible with the reason from rclone's stderr.
                     let lastLine = err.split(whereSeparator: \.isNewline).last.map(String.init)
                     self.active[idx].state =
                         .failed(lastLine ?? (status == 0 ? "Mount ended" : "Mount failed (exit \(status))"))
@@ -89,15 +88,14 @@ final class MountManager {
             }
         }
 
+        active.append(mount)
+        if remember { upsertSaved(SavedMount(remote: remote.name, path: folder.path, autoMount: true)) }
+
         do { try process.run() }
         catch {
             mount.state = .failed("Could not launch rclone")
-            active.append(mount)
             return
         }
-
-        active.append(mount)
-        if remember { upsertSaved(SavedMount(remote: remote.name, path: folder.path, autoMount: true)) }
 
         // Poll the real mount table; flip to .mounted only once the volume actually appears.
         Task { @MainActor in
@@ -114,14 +112,14 @@ final class MountManager {
     }
 
     func unmount(_ mount: ActiveMount) {
-        unmounting.insert(mount.id)   // tell terminationHandler this exit is expected
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
-        task.arguments = ["unmount", "force", mount.mountPoint.path]
-        try? task.run()
-        task.waitUntilExit()
-        if mount.process.isRunning { mount.process.terminate() }
+        unmounting.insert(mount.id)
+        let path = mount.mountPoint.path
+        let process = mount.process
         active.removeAll { $0.id == mount.id }
+        Task.detached {
+            Self.forceUnmount(at: path)
+            if process.isRunning { process.terminate() }
+        }
     }
 
     /// Remove a failed entry the user has acknowledged.
@@ -141,14 +139,20 @@ final class MountManager {
 
     /// Best-effort cleanup on app termination.
     func unmountAll() {
-        for mount in active {
-            let task = Process()
-            task.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
-            task.arguments = ["unmount", "force", mount.mountPoint.path]
-            try? task.run(); task.waitUntilExit()
+        let mounts = active
+        active.removeAll()
+        for mount in mounts {
+            Self.forceUnmount(at: mount.mountPoint.path)
             if mount.process.isRunning { mount.process.terminate() }
         }
-        active.removeAll()
+    }
+
+    private nonisolated static func forceUnmount(at path: String) {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
+        task.arguments = ["unmount", "force", path]
+        try? task.run()
+        task.waitUntilExit()
     }
 
     // MARK: Persistence

@@ -11,8 +11,10 @@ struct FileListView: View {
     struct Notice: Identifiable { let id = UUID(); let title: String; let message: String }
 
     private var displayedItems: [RcloneItem] {
-        guard !search.isEmpty else { return model.items }
-        return model.items.filter { $0.name.localizedCaseInsensitiveContains(search) }
+        let filtered = search.isEmpty
+            ? model.items
+            : model.items.filter { $0.name.localizedCaseInsensitiveContains(search) }
+        return filtered.sorted(using: sortOrder)
     }
 
     var body: some View {
@@ -135,7 +137,7 @@ struct FileListView: View {
         }
         Button("Download…") { Task { await download(items) } }
         Divider()
-        Button("Delete", role: .destructive) { Task { await model.delete(items) } }
+        Button("Delete", role: .destructive) { confirmDelete(items) }
     }
 
     // MARK: Live transfer indicator (native material)
@@ -151,6 +153,8 @@ struct FileListView: View {
                 Spacer()
                 Text("\(ByteCountFormatter.string(fromByteCount: Int64(t.speed), countStyle: .file))/s")
                     .font(.callout).foregroundStyle(.secondary).monospacedDigit()
+                Button("Cancel") { app.cancelActiveTransfer() }
+                    .buttonStyle(.borderless)
             }
             .padding(.horizontal).padding(.vertical, 8)
             .background(.ultraThinMaterial)
@@ -169,13 +173,13 @@ struct FileListView: View {
     }
 
     private func newFolderAction() {
-        if let name = promptText("New Folder", message: "Folder name:", default: "untitled folder") {
+        if let name = AlertHelpers.promptText("New Folder", message: "Folder name:", default: "untitled folder") {
             Task { await model.makeFolder(named: name) }
         }
     }
 
     private func renameItem(_ item: RcloneItem) {
-        if let name = promptText("Rename", message: "New name:", default: item.name) {
+        if let name = AlertHelpers.promptText("Rename", message: "New name:", default: item.name) {
             Task { await model.rename(item, to: name) }
         }
     }
@@ -210,25 +214,20 @@ struct FileListView: View {
 
     private func deleteSelection() {
         let items = model.items.filter { model.selection.contains($0.id) }
-        let alert = NSAlert()
-        alert.messageText = "Delete \(items.count) item(s)?"
-        alert.informativeText = "This permanently removes them from the remote."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "Delete"); alert.addButton(withTitle: "Cancel")
-        if alert.runModal() == .alertFirstButtonReturn { Task { await model.delete(items) } }
+        confirmDelete(items)
     }
 
-    /// Native name-entry prompt (NSAlert + text field).
-    private func promptText(_ title: String, message: String, default def: String = "") -> String? {
-        let alert = NSAlert()
-        alert.messageText = title
-        alert.informativeText = message
-        alert.addButton(withTitle: "OK"); alert.addButton(withTitle: "Cancel")
-        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
-        field.stringValue = def
-        alert.accessoryView = field
-        alert.window.initialFirstResponder = field
-        return alert.runModal() == .alertFirstButtonReturn ? field.stringValue : nil
+    private func confirmDelete(_ items: [RcloneItem]) {
+        guard !items.isEmpty else { return }
+        let noun = items.count == 1 ? "item" : "items"
+        if AlertHelpers.confirm(
+            "Delete \(items.count) \(noun)?",
+            message: "This permanently removes them from the remote.",
+            confirmTitle: "Delete",
+            style: .critical
+        ) {
+            Task { await model.delete(items) }
+        }
     }
 }
 

@@ -59,6 +59,7 @@ struct ContentView: View {
         .sheet(isPresented: $app.showingAbout) { AboutView() }
         .sheet(isPresented: $app.showingJobs) { JobsView() }
         .sheet(isPresented: $app.showingWelcome) { WelcomeView() }
+        .sheet(isPresented: $app.showingSettings) { SettingsView() }
         .sheet(item: $dedupeRemote) { DedupeSheet(remote: $0) }
         .alert("rclone Error", isPresented: .constant(app.loadError != nil)) {
             Button("OK") { app.loadError = nil }
@@ -80,16 +81,25 @@ struct ContentView: View {
         }
         Divider()
         Button("Empty Trash / Cleanup") {
-            if confirm("Clean up “\(remote.name)”?",
-                       "Removes trashed files and old versions where the backend supports it.",
-                       confirmTitle: "Clean Up") {
+            if AlertHelpers.confirm(
+                "Clean up “\(remote.name)”?",
+                message: "Removes trashed files and old versions where the backend supports it.",
+                confirmTitle: "Clean Up"
+            ) {
                 Task { await app.cleanup(remote) }
             }
         }
         Button("Find Duplicates (Dedupe)…") { dedupeRemote = remote }
         Divider()
         Button("Delete Remote", role: .destructive) {
-            Task { await app.deleteRemote(remote) }
+            if AlertHelpers.confirm(
+                "Delete remote “\(remote.name)”?",
+                message: "This removes the remote from your rclone config. Files on the provider are not deleted.",
+                confirmTitle: "Delete Remote",
+                style: .critical
+            ) {
+                Task { await app.deleteRemote(remote) }
+            }
         }
     }
 
@@ -102,15 +112,5 @@ struct ContentView: View {
         if panel.runModal() == .OK, let folder = panel.url {
             app.mounts.mount(remote, at: folder, remember: true)
         }
-    }
-
-    private func confirm(_ title: String, _ message: String, confirmTitle: String) -> Bool {
-        let alert = NSAlert()
-        alert.messageText = title
-        alert.informativeText = message
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: confirmTitle)
-        alert.addButton(withTitle: "Cancel")
-        return alert.runModal() == .alertFirstButtonReturn
     }
 }

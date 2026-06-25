@@ -19,6 +19,8 @@ final class AppModel {
     // Shared transfer state (written by BrowserModel, read by Dashboard + file view).
     var activeTransfer: TransferProgress?
     var transferLabel: String?
+    private(set) var transferInProgress = false
+    private var transferCancellation: TransferCancellation?
 
     // Update checks.
     var appUpdateState: UpdateState = .idle
@@ -29,8 +31,11 @@ final class AppModel {
     var showingAbout = false
     var showingJobs = false
     var showingWelcome = false
+    var showingSettings = false
 
     private let welcomeKey = "hasSeenWelcome"
+    private var hasBootstrapped = false
+
     func dismissWelcome() {
         UserDefaults.standard.set(true, forKey: welcomeKey)
         showingWelcome = false
@@ -40,6 +45,8 @@ final class AppModel {
     var rclonePath: String { backend.executableURL.path }
 
     func bootstrap() async {
+        guard !hasBootstrapped else { return }
+        hasBootstrapped = true
         if !UserDefaults.standard.bool(forKey: welcomeKey) { showingWelcome = true }
         async let version = try? backend.version()
         await loadRemotes()
@@ -47,8 +54,54 @@ final class AppModel {
         mounts.autoMountSaved(remotes: remotes)   // re-establish persisted mounts
     }
 
+    func refreshRcloneVersion() async {
+        rcloneVersion = try? await backend.version()
+    }
+
     /// Backend type for a remote, e.g. "drive" / "onedrive" (for provider icons).
     func type(of remote: Remote) -> String? { remoteTypes[remote.name] }
+
+    /// Runs one transfer at a time; rejects overlapping work with a user-visible error.
+    func performTransfer(
+        label: String,
+        stream: AsyncThrowingStream<TransferProgress, Error>,
+        onComplete: (() async -> Void)? = nil
+    ) async throws -> TransferProgress {
+        guard !transferInProgress else {
+            loadError = "Another transfer is already in progress."
+            throw TransferError.alreadyRunning
+        }
+        transferInProgress = true
+        transferLabel = label
+        activeTransfer = TransferProgress()
+        let cancellation = TransferCancellation()
+        transferCancellation = cancellation
+        var last = TransferProgress()
+        defer {
+            transferInProgress = false
+            activeTransfer = nil
+            transferLabel = nil
+            transferCancellation = nil
+        }
+        for try await progress in stream {
+            if cancellation.isCancelled { throw CancellationError() }
+            activeTransfer = progress
+            last = progress
+        }
+        if let onComplete { await onComplete() }
+        return last
+    }
+
+    func cancelActiveTransfer() {
+        transferCancellation?.cancel()
+    }
+
+    /// Invalidate cached listings touched by a job endpoint path.
+    func invalidateCache(forEndpoint remote: String, path: String) {
+        if remote.isEmpty { return }
+        let prefix = path.isEmpty ? "\(remote):" : "\(remote):\(path)"
+        cache.invalidate(matchingPrefix: prefix)
+    }
 
     // MARK: Remote maintenance
 
@@ -100,4 +153,19 @@ final class AppModel {
             return .failed(error.localizedDescription)
         }
     }
+}
+
+enum TransferError: LocalizedError {
+    case alreadyRunning
+    var errorDescription: String? {
+        switch self {
+        case .alreadyRunning: return "Another transfer is already in progress."
+        }
+    }
+}
+
+/// Lightweight cancellation token for in-flight rclone transfers.
+final class TransferCancellation {
+    private(set) var isCancelled = false
+    func cancel() { isCancelled = true }
 }

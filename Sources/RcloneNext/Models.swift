@@ -165,7 +165,8 @@ struct SavedMount: Codable, Identifiable, Sendable {
     let remote: String
     let path: String
     var autoMount: Bool
-    var id: String { remote }
+    /// Composite key so one remote can have multiple saved mount points.
+    var id: String { "\(remote)@\(path)" }
 }
 
 /// rclone dedupe resolution modes (the non-interactive `mode` argument).

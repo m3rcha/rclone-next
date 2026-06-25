@@ -33,7 +33,12 @@ struct MenuBarPanel: View {
             if let t = app.activeTransfer {
                 Divider()
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(app.transferLabel ?? "Transferring…").font(.caption).lineLimit(1)
+                    HStack {
+                        Text(app.transferLabel ?? "Transferring…").font(.caption).lineLimit(1)
+                        Spacer()
+                        Button("Cancel") { app.cancelActiveTransfer() }
+                            .buttonStyle(.borderless).font(.caption)
+                    }
                     ProgressView(value: t.fraction)
                 }
             }
@@ -58,7 +63,7 @@ struct MenuBarPanel: View {
         }
         .padding(12)
         .frame(width: 340)
-        .task { if app.rcloneVersion == nil { await app.bootstrap() } }
+        .task { await app.bootstrap() }
     }
 
     /// Height that fits the remotes exactly (up to ~7), then scrolls.

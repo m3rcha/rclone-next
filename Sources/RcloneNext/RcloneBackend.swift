@@ -1,20 +1,35 @@
 import Foundation
 
+/// Thread-safe stderr accumulator for process pipe handlers.
+private final class ErrBuffer: @unchecked Sendable {
+    private let lock = NSLock()
+    private var data = Data()
+    func append(_ d: Data) { lock.lock(); data.append(d); lock.unlock() }
+    var string: String { lock.lock(); defer { lock.unlock() }; return String(decoding: data, as: UTF8.self) }
+}
+
 /// Thin, Sendable wrapper around the rclone CLI. All process work happens off the
 /// main actor; results come back via async/await or an AsyncThrowingStream.
 final class RcloneBackend: Sendable {
     static let shared = RcloneBackend()
-    let executableURL: URL
+
+    private let lock = NSLock()
+    private var _executableURL: URL
+
+    var executableURL: URL {
+        lock.lock(); defer { lock.unlock() }
+        return _executableURL
+    }
 
     init() {
-        let candidates = [
-            "/opt/homebrew/bin/rclone",   // Apple Silicon Homebrew
-            "/usr/local/bin/rclone",      // Intel Homebrew  (← present on this machine)
-            "/usr/bin/rclone"
-        ]
-        self.executableURL = URL(fileURLWithPath:
-            candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
-            ?? "/usr/local/bin/rclone")
+        _executableURL = RclonePathSettings.resolve()
+    }
+
+    /// Re-read the path from UserDefaults / auto-discovery (after Settings changes).
+    func refreshExecutablePath() {
+        lock.lock()
+        _executableURL = RclonePathSettings.resolve()
+        lock.unlock()
     }
 
     // MARK: Generic execution
@@ -71,10 +86,7 @@ final class RcloneBackend: Sendable {
     /// `rclone listremotes` → ["gdrive", "s3", …]
     func listRemotes() async throws -> [Remote] {
         let data = try await run(["listremotes"])
-        return String(decoding: data, as: UTF8.self)
-            .split(whereSeparator: \.isNewline)
-            .map { $0.hasSuffix(":") ? String($0.dropLast()) : String($0) }
-            .filter { !$0.isEmpty }
+        return RclonePathSettings.parseRemoteNames(from: String(decoding: data, as: UTF8.self))
             .map(Remote.init)
     }
 
@@ -191,9 +203,11 @@ final class RcloneBackend: Sendable {
             process.standardOutput = Pipe()
             process.standardInput = FileHandle.nullDevice
 
+            let errBuffer = ErrBuffer()
             errPipe.fileHandleForReading.readabilityHandler = { h in
                 let chunk = h.availableData
                 guard !chunk.isEmpty else { return }
+                errBuffer.append(chunk)
                 for line in String(decoding: chunk, as: UTF8.self)
                         .split(separator: "\n") {
                     guard let d = line.data(using: .utf8),
@@ -211,9 +225,14 @@ final class RcloneBackend: Sendable {
             }
             process.terminationHandler = { proc in
                 errPipe.fileHandleForReading.readabilityHandler = nil
-                if proc.terminationStatus == 0 { continuation.finish() }
-                else { continuation.finish(throwing: RcloneError.nonZeroExit(
-                    code: proc.terminationStatus, stderr: "transfer failed")) }
+                if proc.terminationStatus == 0 {
+                    continuation.finish()
+                } else {
+                    let stderr = errBuffer.string.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let message = stderr.isEmpty ? "transfer failed" : stderr
+                    continuation.finish(throwing: RcloneError.nonZeroExit(
+                        code: proc.terminationStatus, stderr: message))
+                }
             }
             do { try process.run() }
             catch { continuation.finish(throwing: RcloneError.binaryNotFound) }

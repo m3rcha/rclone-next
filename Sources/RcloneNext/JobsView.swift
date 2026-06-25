@@ -96,7 +96,8 @@ struct JobsView: View {
                 Text("Running…").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Button("Cancel") { task?.cancel(); dismiss() }.keyboardShortcut(.cancelAction)
+            Button("Cancel") { app.cancelActiveTransfer(); task?.cancel(); dismiss() }
+                .keyboardShortcut(.cancelAction)
             Button(dryRun ? "Preview" : op.title) { task = Task { await run() } }
                 .keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
                 .disabled(running || !isValid)
@@ -124,16 +125,19 @@ struct JobsView: View {
     private func run() async {
         if op.isDestructive && !dryRun && !confirmDestructive() { return }
         running = true; error = nil; result = nil
-        defer { running = false; app.activeTransfer = nil; app.transferLabel = nil }
+        defer { running = false }
 
         let src = fullPath(sourceRemote, sourcePath)
         let dst = fullPath(destRemote, destPath)
-        app.transferLabel = "\(op.title): \(src) → \(dst)"
-        app.activeTransfer = TransferProgress()
-        var last = TransferProgress()
         do {
-            for try await p in app.backend.transfer(op, from: src, to: dst, dryRun: dryRun) {
-                app.activeTransfer = p; last = p
+            let last = try await app.performTransfer(
+                label: "\(op.title): \(src) → \(dst)",
+                stream: app.backend.transfer(op, from: src, to: dst, dryRun: dryRun)
+            ) {
+                if !dryRun {
+                    app.invalidateCache(forEndpoint: sourceRemote, path: sourcePath)
+                    app.invalidateCache(forEndpoint: destRemote, path: destPath)
+                }
             }
             let moved = ByteCountFormatter.string(fromByteCount: last.bytes, countStyle: .file)
             result = dryRun
@@ -142,17 +146,19 @@ struct JobsView: View {
             await app.loadRemotes()
         } catch is CancellationError {
             result = "Cancelled."
+        } catch is TransferError {
+            self.error = app.loadError
         } catch {
             self.error = error.localizedDescription
         }
     }
 
     private func confirmDestructive() -> Bool {
-        let alert = NSAlert()
-        alert.messageText = "Run \(op.title) without dry-run?"
-        alert.informativeText = "This can permanently delete files at the destination."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: op.title); alert.addButton(withTitle: "Cancel")
-        return alert.runModal() == .alertFirstButtonReturn
+        AlertHelpers.confirm(
+            "Run \(op.title) without dry-run?",
+            message: "This can permanently delete files at the destination.",
+            confirmTitle: op.title,
+            style: .critical
+        )
     }
 }

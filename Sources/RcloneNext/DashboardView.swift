@@ -21,6 +21,9 @@ struct DashboardView: View {
         }
         .navigationTitle("Dashboard")
         .toolbar {
+            Button { app.showingSettings = true } label: {
+                Label("Settings", systemImage: "gearshape")
+            }.help("Settings…")
             Button { app.showingJobs = true } label: {
                 Label("Sync", systemImage: "arrow.triangle.2.circlepath")
             }.help("Sync / Copy / Move…")
@@ -28,7 +31,7 @@ struct DashboardView: View {
                 Label("Add Remote", systemImage: "plus")
             }.help("Add Remote…")
         }
-        .task { if app.rcloneVersion == nil { await app.bootstrap() } }
+        .task { await app.bootstrap() }
     }
 
     // MARK: Hero header
@@ -96,6 +99,8 @@ struct DashboardView: View {
                     Text("\(bytes(t.bytes)) of \(bytes(t.totalBytes))")
                     Spacer()
                     Text("\(bytes(Int64(t.speed)))/s").foregroundStyle(.secondary)
+                    Button("Cancel") { app.cancelActiveTransfer() }
+                        .buttonStyle(.borderless).font(.caption)
                 }
                 .font(.caption).monospacedDigit()
             }.padding(6)

@@ -82,7 +82,8 @@ final class BrowserModel {
             do { try await backend.delete(item, in: currentPath) }
             catch { self.error = error.localizedDescription }
         }
-        await load(forceRefresh: true)   // listing changed → bypass cache
+        app.cache.invalidate(currentPath)
+        await load(forceRefresh: true)
     }
 
     /// Create a folder in the current directory.
@@ -91,6 +92,7 @@ final class BrowserModel {
         guard !trimmed.isEmpty else { return }
         do { try await backend.mkdir("\(currentPath)/\(trimmed)") }
         catch { self.error = error.localizedDescription }
+        app.cache.invalidate(currentPath)
         await load(forceRefresh: true)
     }
 
@@ -101,6 +103,7 @@ final class BrowserModel {
         do { try await backend.moveto(from: "\(currentPath)/\(item.name)",
                                       to: "\(currentPath)/\(trimmed)") }
         catch { self.error = error.localizedDescription }
+        app.cache.invalidate(currentPath)
         await load(forceRefresh: true)
     }
 
@@ -113,19 +116,21 @@ final class BrowserModel {
     /// Download a file to a temp dir and open it in its default app.
     func openFile(_ item: RcloneItem) async {
         guard !item.isDir else { return }
+        let session = UUID().uuidString
         let dest = FileManager.default.temporaryDirectory
             .appendingPathComponent("RcloneNext", isDirectory: true)
+            .appendingPathComponent(session, isDirectory: true)
             .appendingPathComponent(item.name)
         try? FileManager.default.createDirectory(
             at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
-        app.transferLabel = "Opening \(item.name)…"
-        app.activeTransfer = TransferProgress()
-        defer { app.activeTransfer = nil; app.transferLabel = nil }
         do {
-            for try await p in backend.copy(from: "\(currentPath)/\(item.name)", to: dest.path) {
-                app.activeTransfer = p
-            }
+            _ = try await app.performTransfer(
+                label: "Opening \(item.name)…",
+                stream: backend.copy(from: "\(currentPath)/\(item.name)", to: dest.path)
+            )
             NSWorkspace.shared.open(dest)
+        } catch is TransferError {
+            // surfaced via AppModel.loadError
         } catch { self.error = error.localizedDescription }
     }
 
@@ -140,12 +145,18 @@ final class BrowserModel {
     }
 
     private func runTransfer(from source: String, to dest: String) async {
-        app.transferLabel = (source as NSString).lastPathComponent
-        app.activeTransfer = TransferProgress()
-        defer { app.activeTransfer = nil; app.transferLabel = nil }
+        let name = (source as NSString).lastPathComponent
         do {
-            for try await p in backend.copy(from: source, to: dest) { app.activeTransfer = p }
-            await load(forceRefresh: true)   // an upload may have added files here
+            _ = try await app.performTransfer(
+                label: name,
+                stream: backend.copy(from: source, to: dest)
+            ) { [weak self] in
+                guard let self else { return }
+                self.app.cache.invalidate(self.currentPath)
+                await self.load(forceRefresh: true)
+            }
+        } catch is TransferError {
+            // surfaced via AppModel.loadError
         } catch { self.error = error.localizedDescription }
     }
 }

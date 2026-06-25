@@ -8,6 +8,7 @@ struct DedupeSheet: View {
 
     @State private var mode: DedupeMode = .newest
     @State private var running = false
+    @State private var showConfirm = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -27,12 +28,22 @@ struct DedupeSheet: View {
                 if running { ProgressView().controlSize(.small) }
                 Spacer()
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).disabled(running)
-                Button("Run Dedupe") { Task { await run() } }
+                Button("Run Dedupe") { showConfirm = true }
                     .keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).disabled(running)
             }
         }
         .padding(20)
         .frame(width: 430, height: 250)
+        .confirmationDialog(
+            "Run dedupe on “\(remote.name)”?",
+            isPresented: $showConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Run Dedupe", role: .destructive) { Task { await run() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The “\(mode.title)” strategy may permanently delete or rename duplicate files on this remote.")
+        }
     }
 
     private func run() async {

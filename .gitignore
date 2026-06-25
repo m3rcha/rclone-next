@@ -1,0 +1,16 @@
+# Build artifacts
+/.build/
+.swiftpm/
+*.o
+*.swiftmodule
+
+# Packaged app bundle (produced by bundle.sh)
+RcloneNext.app/
+
+# macOS
+.DS_Store
+
+# Xcode (if a project is ever generated)
+*.xcodeproj
+xcuserdata/
+DerivedData/

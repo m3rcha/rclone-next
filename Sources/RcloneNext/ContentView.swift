@@ -34,18 +34,6 @@ struct ContentView: View {
             }
             .navigationTitle("Rclone Next")
             .navigationSplitViewColumnWidth(min: 200, ideal: 230)
-            .safeAreaInset(edge: .bottom) {
-                HStack {
-                    Button { app.showingAddRemote = true } label: { Image(systemName: "plus") }
-                        .buttonStyle(.borderless).help("Add Remote…")
-                    Button { app.showingJobs = true } label: {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                    }.buttonStyle(.borderless).help("Sync…")
-                    Spacer()
-                }
-                .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(.ultraThinMaterial)
-            }
         } detail: {
             switch app.selection {
             case .dashboard, .none:

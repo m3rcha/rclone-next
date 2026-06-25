@@ -7,7 +7,8 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "RcloneNext",
-            path: "Sources/RcloneNext"
+            path: "Sources/RcloneNext",
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "RcloneNextTests",

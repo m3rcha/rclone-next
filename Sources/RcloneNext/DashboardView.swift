@@ -38,11 +38,8 @@ struct DashboardView: View {
 
     private var heroHeader: some View {
         HStack(spacing: 14) {
-            Image(systemName: "externaldrive.connected.to.line.below.fill")
-                .font(.system(size: 34)).symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.tint)
+            BrandImage.headerLogo
             VStack(alignment: .leading, spacing: 2) {
-                Text("Rclone Next").font(.largeTitle.bold())
                 Text("\(app.remotes.count) remote\(app.remotes.count == 1 ? "" : "s") · "
                    + "\(app.mounts.active.filter { $0.state == .mounted }.count) mounted")
                     .font(.callout).foregroundStyle(.secondary)

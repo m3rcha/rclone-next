@@ -7,8 +7,10 @@ struct RcloneNextApp: App {
 
     var body: some Scene {
         // Always-present menu bar entry; single click opens a rich panel.
-        MenuBarExtra("Rclone Next", systemImage: "externaldrive.connected.to.line.below") {
+        MenuBarExtra {
             MenuBarPanel().environment(app)
+        } label: {
+            BrandImage.menuBarIcon
         }
         .menuBarExtraStyle(.window)
 
@@ -50,6 +52,7 @@ struct RcloneNextApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        BrandImage.applyAppIcon()
     }
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated { MountManager.shared.unmountAll() }

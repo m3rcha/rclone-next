@@ -41,7 +41,7 @@ struct FileListView: View {
         }
         .overlay { if model.isLoading { ProgressView().controlSize(.large) } }
         .safeAreaInset(edge: .top, spacing: 0) { breadcrumbBar }
-        .safeAreaInset(edge: .bottom) { transferBar }
+        .safeAreaInset(edge: .bottom) { bottomBar }
         .searchable(text: $search, placement: .toolbar, prompt: "Filter")
         .navigationTitle(model.remote.name)
         .toolbar { toolbarContent }
@@ -101,22 +101,61 @@ struct FileListView: View {
                 .keyboardShortcut(.upArrow, modifiers: .command)
         }
         ToolbarItemGroup {
-            Button { mountAction() } label: { Image(systemName: "externaldrive.badge.plus") }
-                .help("Mount this remote…")
-            Button { newFolderAction() } label: { Image(systemName: "folder.badge.plus") }
-                .help("New Folder")
-            Button { uploadAction() } label: { Image(systemName: "arrow.up.circle") }
-                .help("Upload…")
-            Button { downloadSelection() } label: { Image(systemName: "arrow.down.circle") }
-                .disabled(model.selection.isEmpty).help("Download…")
-            Button(role: .destructive) { deleteSelection() } label: {
-                Image(systemName: "trash")
-            }.disabled(model.selection.isEmpty).help("Delete")
             Button { Task { await model.load(forceRefresh: true) } } label: {
                 Image(systemName: "arrow.clockwise")
             }.help("Refresh")
         }
     }
+
+    // MARK: Bottom bar
+
+    @ViewBuilder
+    private var bottomBar: some View {
+        VStack(spacing: 0) {
+            if model.activeTransfer != nil { transferBar }
+            fileActionBar
+        }
+    }
+
+    private var fileActionBar: some View {
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            actionGroup {
+                Button { mountAction() } label: {
+                    Image(systemName: "externaldrive.badge.plus")
+                }.help("Mount this remote…")
+            }
+            actionDivider
+            actionGroup {
+                Button { newFolderAction() } label: {
+                    Image(systemName: "folder.badge.plus")
+                }.help("New Folder")
+                Button { uploadAction() } label: {
+                    Image(systemName: "arrow.up.circle")
+                }.help("Upload…")
+                Button { downloadSelection() } label: {
+                    Image(systemName: "arrow.down.circle")
+                }.disabled(model.selection.isEmpty).help("Download…")
+                Button(role: .destructive) { deleteSelection() } label: {
+                    Image(systemName: "trash")
+                }.disabled(model.selection.isEmpty).help("Delete")
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .background(.ultraThinMaterial)
+    }
+
+    private var actionDivider: some View {
+        Divider().frame(height: 18).padding(.horizontal, 10)
+    }
+
+    @ViewBuilder
+    private func actionGroup<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 6) { content() }
+    }
+
+    // MARK: Context menu
 
     @ViewBuilder
     private func contextMenu(for items: [RcloneItem]) -> some View {

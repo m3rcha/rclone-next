@@ -14,8 +14,7 @@ struct AboutView: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Image(systemName: "externaldrive.connected.to.line.below.fill")
-                .font(.system(size: 56)).foregroundStyle(.tint)
+            BrandImage.heroIcon
                 .padding(.top, 24)
 
             VStack(spacing: 4) {

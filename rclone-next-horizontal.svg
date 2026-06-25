@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" version="1.1" viewBox="0 0 75.13 22.7">
+  <!-- Generator: Adobe Illustrator 30.5.1, SVG Export Plug-In . SVG Version: 2.1.4 Build 3)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #9cb080;
+      }
+
+      .st1 {
+        fill: #273338;
+      }
+
+      .st2 {
+        fill: #2b5748;
+      }
+
+      .st3 {
+        fill: #618764;
+      }
+
+      .st4 {
+        font-family: Helvetica-Bold, Helvetica;
+        font-size: 4.73px;
+        font-weight: 700;
+        letter-spacing: .2em;
+      }
+    </style>
+  </defs>
+  <g id="svg1144" inkscape:version="0.92.4 (5da689c313, 2019-01-14)" sodipodi:docname="rclone-ar21.svg">
+    <g>
+      <sodipodi:namedview id="namedview1146" bordercolor="#666666" borderopacity="1" gridtolerance="10" guidetolerance="10" inkscape:current-layer="svg1144" inkscape:cx="-82.181821" inkscape:cy="26.5" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-height="785" inkscape:window-maximized="0" inkscape:window-width="1521" inkscape:window-x="70" inkscape:window-y="27" inkscape:zoom="1.5575221" objecttolerance="10" pagecolor="#ffffff" showgrid="false" units="px"/>
+      <g id="g1103">
+        <path id="path1101" class="st3" d="M22.96,11.72c-.76-1.31-1.86-2.3-3.12-2.92-.16.86-.47,1.72-.93,2.52l-.73,1.27c.49.27.91.67,1.21,1.19.88,1.52.36,3.47-1.17,4.35-1.52.88-3.47.36-4.35-1.17l-1.48-2.56h-2.39l-1.19,2.07,1.48,2.56c2.02,3.5,6.5,4.7,10,2.68,3.5-2.02,4.7-6.5,2.68-10" inkscape:connector-curvature="0"/>
+      </g>
+      <g id="g1107">
+        <path id="path1105" class="st0" d="M15.63.98C12.13-1.04,7.65.16,5.63,3.66c-.76,1.31-1.06,2.76-.96,4.16.83-.29,1.72-.45,2.65-.45h1.47c0-.56.12-1.13.42-1.65.88-1.52,2.83-2.05,4.35-1.17,1.52.88,2.05,2.83,1.17,4.35l-1.47,2.56,1.19,2.07h2.39s1.47-2.56,1.47-2.56c2.02-3.5.82-7.98-2.68-10" inkscape:connector-curvature="0"/>
+      </g>
+      <g id="g1111">
+        <path id="path1109" class="st2" d="M9.69,19.38l-.74-1.27c-.48.29-1.04.46-1.64.46-1.76,0-3.19-1.43-3.19-3.19s1.43-3.19,3.19-3.19h2.95s1.19-2.07,1.19-2.07l-1.19-2.07h-2.95c-4.04,0-7.32,3.28-7.32,7.32s3.28,7.32,7.32,7.32c1.51,0,2.92-.46,4.09-1.25-.67-.57-1.25-1.27-1.72-2.07" inkscape:connector-curvature="0"/>
+      </g>
+      <g id="g1115">
+        <path id="path1113" class="st1" d="M33.29,9.04c1.36,0,2.37-.68,2.37-1.86v-.02c0-1.09-.86-1.78-2.33-1.78h-2.77v3.66h2.74ZM29.95,4.83h3.41c1,0,1.8.31,2.29.8.38.38.62.93.62,1.51v.02c0,1.36-1.01,2.14-2.38,2.32l2.68,3.47h-.77l-2.59-3.37h-2.66v3.37h-.6V4.83Z" inkscape:connector-curvature="0"/>
+      </g>
+      <g id="g1119">
+        <path id="path1117" class="st1" d="M37.05,8.92v-.02c0-2.31,1.74-4.2,4.24-4.2,1.53,0,2.45.51,3.2,1.25l-1.14,1.31c-.63-.57-1.27-.92-2.08-.92-1.37,0-2.36,1.14-2.36,2.53v.02c0,1.39.96,2.55,2.36,2.55.93,0,1.5-.37,2.14-.95l1.14,1.15c-.84.89-1.76,1.45-3.33,1.45-2.39,0-4.17-1.85-4.17-4.18" inkscape:connector-curvature="0"/>
+      </g>
+      <g id="g1123">
+        <path id="path1121" class="st1" d="M45.28,4.83h1.79v6.5h4.05v1.63h-5.84V4.83Z" inkscape:connector-curvature="0"/>
+      </g>
+      <g id="g1127">
+        <path id="path1125" class="st1" d="M57.71,8.92v-.02c0-1.39-1.02-2.55-2.46-2.55s-2.44,1.14-2.44,2.53v.02c0,1.39,1.02,2.55,2.46,2.55,1.44,0,2.44-1.14,2.44-2.53M50.94,8.92v-.02c0-2.31,1.82-4.2,4.33-4.2s4.31,1.87,4.31,4.18v.02c0,2.31-1.82,4.2-4.33,4.2s-4.31-1.87-4.31-4.18" inkscape:connector-curvature="0"/>
+      </g>
+      <g id="g1131">
+        <path id="path1129" class="st1" d="M60.47,4.83h1.65l3.81,5v-5h1.76v8.13h-1.52l-3.93-5.17v5.17h-1.76V4.83Z" inkscape:connector-curvature="0"/>
+      </g>
+      <g id="g1135">
+        <path id="path1133" class="st1" d="M68.94,4.83h6.13v1.59h-4.35v1.65h3.83v1.59h-3.83v1.71h4.41v1.59h-6.19V4.83Z" inkscape:connector-curvature="0"/>
+      </g>
+      <text class="st4" transform="translate(29.58 17.68)"><tspan x="0" y="0">NEXT</tspan></text>
+    </g>
+  </g>
+</svg>

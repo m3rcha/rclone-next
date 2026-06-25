@@ -76,11 +76,15 @@ struct WelcomeView: View {
 
     private func stepView(_ step: Step) -> some View {
         VStack(spacing: 18) {
-            Image(systemName: step.symbol)
-                .font(.system(size: 64))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.tint)
-                .padding(.top, 40)
+            if page == 0 {
+                BrandImage.heroIcon.padding(.top, 40)
+            } else {
+                Image(systemName: step.symbol)
+                    .font(.system(size: 64))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.tint)
+                    .padding(.top, 40)
+            }
             Text(step.title).font(.title2).bold()
             Text(step.blurb)
                 .font(.body).foregroundStyle(.secondary)

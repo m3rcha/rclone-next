@@ -10,8 +10,7 @@ struct MenuBarPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Rclone Next", systemImage: "externaldrive.connected.to.line.below")
-                    .font(.headline)
+                BrandImage.headerLogo
                 Spacer()
                 Text(app.rcloneVersion ?? "").font(.caption).foregroundStyle(.secondary)
             }

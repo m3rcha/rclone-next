@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — Rclone Next</title>
+  <link rel="icon" href="assets/icon.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="index.html"><img src="assets/wordmark.svg" alt="Rclone Next" width="200" height="60"></a>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="terms.html">Terms</a>
+        <a href="https://github.com/m3rcha/rclone-next">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="wrap prose">
+      <h1>Privacy Policy</h1>
+      <p><strong>Last updated:</strong> June 25, 2026</p>
+      <p>
+        Rclone Next (&quot;the App&quot;) is developed by Ege Özten. This policy describes what data the App
+        handles on your Mac. The App is open source:
+        <a href="https://github.com/m3rcha/rclone-next">github.com/m3rcha/rclone-next</a>.
+      </p>
+
+      <h2>Summary</h2>
+      <p>
+        Rclone Next does not run its own servers and does not sell your data. The App runs locally on
+        your Mac and shells out to your installed <code>rclone</code> binary. Your files and cloud
+        credentials are managed by rclone under your existing configuration.
+      </p>
+
+      <h2>Data stored on your device</h2>
+      <ul>
+        <li><strong>App preferences</strong> — e.g. custom rclone path, welcome screen state, saved mount list (via macOS UserDefaults on your Mac).</li>
+        <li><strong>rclone configuration</strong> — stored by rclone in your user account (typically <code>~/.config/rclone/rclone.conf</code>). Rclone Next reads this through the rclone CLI; it does not upload your config to us.</li>
+      </ul>
+
+      <h2>Network activity</h2>
+      <ul>
+        <li><strong>Update checks</strong> — the App may contact the GitHub API to compare its version against published releases, and runs <code>rclone version --check</code> for rclone update info.</li>
+        <li><strong>rclone operations</strong> — any transfer, browse, mount, or sync connects to cloud providers you configured in rclone. That traffic goes between your Mac, rclone, and those providers — not through Rclone Next servers.</li>
+        <li><strong>Documentation links</strong> — opening help links (e.g. rclone.org) uses your browser or system default handler.</li>
+      </ul>
+
+      <h2>What we do not collect</h2>
+      <ul>
+        <li>No analytics or advertising SDKs</li>
+        <li>No account system or cloud backup of your usage</li>
+        <li>No collection of file names, remote contents, or passwords by the App developer</li>
+      </ul>
+
+      <h2>Third parties</h2>
+      <p>
+        Cloud storage providers (Google Drive, OneDrive, S3, etc.) are configured and accessed through
+        rclone. Their privacy policies apply to data stored with them. See
+        <a href="https://rclone.org/privacy/">rclone&apos;s privacy information</a>.
+      </p>
+
+      <h2>Children</h2>
+      <p>The App is not directed at children under 13.</p>
+
+      <h2>Changes</h2>
+      <p>We may update this policy on this page. Continued use of the App after changes constitutes acceptance.</p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions or concerns:
+        <a href="https://github.com/m3rcha/rclone-next/issues">open a GitHub issue</a>.
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>© 2026 Ege Özten</span>
+      <span><a href="index.html">Home</a> · <a href="terms.html">Terms</a></span>
+    </div>
+  </footer>
+</body>
+</html>

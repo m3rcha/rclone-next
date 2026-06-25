@@ -81,3 +81,8 @@ Full Xcode is required (SwiftUI macros). The app shells out to a user-installed 
 ## License
 
 Apache 2.0 — see [`LICENSE`](LICENSE).
+
+## Website
+
+Project site (GitHub Pages): after enabling Pages from the `/docs` folder on `main`, it will be available at
+`https://m3rcha.github.io/rclone-next/` — includes download links, Privacy Policy, and Terms of Service.

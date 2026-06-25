@@ -1,7 +1,7 @@
-<p align="center">
+-<p align="center">
   <img src="rclone-next-horizontal.svg" alt="Rclone Next" width="280">
 </p>
-
+-
 A native **macOS menu-bar app** for managing [rclone](https://rclone.org): browse remotes, transfer files, mount drives, and run sync jobs.
 
 Built with Swift / SwiftUI / AppKit. Requires **macOS 14+** and **Xcode** (SwiftUI macros need the full Xcode SDK).
